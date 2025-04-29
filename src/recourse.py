@@ -71,12 +71,12 @@ class LARRecourse:
         vals = beta*J.eval(x_rs, *theta) + (1-beta)*J.eval(x_rs, *theta_p)
         min_i = np.argmin(vals)
         return deltas[min_i]
-
+    
     def sign(self, x):
         s = np.sign(x)
         if s == 0: return 1
         return s
-    
+               
     def get_max_idx(self, weights: np.ndarray, changed: List):
         weights_copy = deepcopy(weights)
         while True:
@@ -86,16 +86,29 @@ class LARRecourse:
             else:
                 weights_copy[idx] = 0.
         
-    def calc_theta_adv(self, x: np.ndarray):
-        weights_adv = self.weights - (self.alpha * np.sign(x))
-        for i in range(len(x)):
-            if np.sign(x[i]) == 0:
-                weights_adv[i] = weights_adv[i] - (self.alpha * np.sign(weights_adv[i]))
-        bias_adv = self.bias - self.alpha
-        
-        return weights_adv, bias_adv
+    def sign_x(self, x: np.float64, direction: int) -> int:
+        """
+        direction = 1 -> x want to move to positive
+        direction = -1 -> x want to move to negative
+        direction = 0 -> x do not want to move
+        """
+
+        return np.sign(x) if x != 0 else direction
     
-    def calc_theta_adv2(self, x: np.ndarray):
+    def find_directions(self, weights: np.ndarray) -> np.ndarray:
+        """
+        We do not need to find direction for bias, so
+        the function accepts only weights
+        """
+        directions = np.zeros(weights.size)
+
+        for i, val in enumerate(weights):
+            if val > 0: directions[i] = 1
+            elif val < 0: directions[i] = -1 
+
+        return directions
+    
+    def calc_theta_adv(self, x: np.ndarray):
         weights_adv = self.weights - (self.alpha * np.sign(x))
         for i in range(len(x)):
             if np.sign(x[i]) == 0:
@@ -114,60 +127,38 @@ class LARRecourse:
     
     def get_robust_recourse(self, x_0: np.ndarray):
         x = deepcopy(x_0)
-        weights, bias = self.calc_theta_adv(x)
-        changed = [True if i in self.imm_features else False for i in range(len(weights))]
-        while True:
-            if np.all(changed):
-                break
-    
-            i = self.get_max_idx(weights, changed)
-            x_i, w_i = x[i], weights[i]
-            
-            c = np.matmul(x, weights) + bias
-            delta = self.calc_delta(w_i, c[0])
-            
-            if (x_i == 0) and (x_i != x_0[i]):
-                if (self.sign(delta) != self.sign(x_0[i])):
-                    x[i] = x[i] + delta
-                break
-            elif (self.sign(x_i+delta) == self.sign(x_i)):
-                x[i] = x[i] + delta
+        active = np.arange(0, self.weights.size)
+        active = np.delete(active, self.imm_features)
+        weights = np.zeros(self.weights.size)
+        bias = self.bias - self.alpha
+
+        for i_active, i in enumerate(active):
+            if x_0[i] != 0:
+                weights[i] = self.weights[i] - (self.alpha * np.sign(x_0[i]))
+            else:
+                if np.abs(self.weights[i]) > self.alpha:
+                    weights[i] = self.weights[i] - (self.alpha * np.sign(self.weights[i]))
+                else:
+                    active = np.delete(active, i_active)
+
+        directions = self.find_directions(weights)
+
+        while active.size != 0:
+            i_active = np.argmax(np.abs(weights[active]))
+            i = active[i_active]
+
+            c = (x @ weights) + bias
+            delta = self.calc_delta(weights[i], c)
+
+            if self.sign_x(x[i] + delta, directions[i]) == self.sign_x(x[i], directions[i]):
+                x[i] += delta
                 break
             else:
                 x[i] = 0
-                if self.sign(self.weights[i]) == self.sign(self.weights[i] + (self.alpha * self.sign(x_0[i]))):
+                if np.abs(weights[i]) > self.alpha:
                     weights[i] = self.weights[i] + (self.alpha * np.sign(x_0[i]))
                 else:
-                    changed[i] = True
-        return x
-    
-    def get_robust_recourse2(self, x_0: np.ndarray):
-        x = deepcopy(x_0)
-        weights, bias = self.calc_theta_adv(x)
-        changed = [True if i in self.imm_features else False for i in range(len(weights))]
-        while True:
-            if np.all(changed):
-                break
-    
-            i = self.get_max_idx(weights, changed)
-            x_i, w_i = x[i], weights[i]
-            
-            c = np.matmul(x, weights) + bias
-            delta = self.calc_delta(w_i, c[0])
-            
-            if (x_i == 0) and (x_i != x_0[i]):
-                if (self.sign(delta) != self.sign(x_0[i])):
-                    x[i] = x[i] + delta
-                break
-            elif (self.sign(x_i+delta) == self.sign(x_i)):
-                x[i] = x[i] + delta
-                break
-            else:
-                x[i] = 0
-                if self.sign(self.weights[i]) == self.sign(self.weights[i] + (self.alpha * self.sign(x_0[i]))):
-                    weights[i] = self.weights[i] + (self.alpha * np.sign(x_0[i]))
-                else:
-                    changed[i] = True
+                    active = np.delete(active, i_active)            
         return x
         
     def get_consistent_recourse(self, x_0: np.ndarray, theta_p: tuple[np.ndarray, np.ndarray]):
