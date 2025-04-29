@@ -95,6 +95,15 @@ class LARRecourse:
         
         return weights_adv, bias_adv
     
+    def calc_theta_adv2(self, x: np.ndarray):
+        weights_adv = self.weights - (self.alpha * np.sign(x))
+        for i in range(len(x)):
+            if np.sign(x[i]) == 0:
+                weights_adv[i] = weights_adv[i] - (self.alpha * np.sign(weights_adv[i]))
+        bias_adv = self.bias - self.alpha
+        
+        return weights_adv, bias_adv
+    
     def get_recourse(self, x_0: np.ndarray, beta: float, theta_p: tuple[np.ndarray, np.ndarray] = None):
         if beta == 1.:
             return self.get_robust_recourse(x_0)
@@ -104,6 +113,35 @@ class LARRecourse:
             return self.get_augmented_recourse(x_0, theta_p, beta)
     
     def get_robust_recourse(self, x_0: np.ndarray):
+        x = deepcopy(x_0)
+        weights, bias = self.calc_theta_adv(x)
+        changed = [True if i in self.imm_features else False for i in range(len(weights))]
+        while True:
+            if np.all(changed):
+                break
+    
+            i = self.get_max_idx(weights, changed)
+            x_i, w_i = x[i], weights[i]
+            
+            c = np.matmul(x, weights) + bias
+            delta = self.calc_delta(w_i, c[0])
+            
+            if (x_i == 0) and (x_i != x_0[i]):
+                if (self.sign(delta) != self.sign(x_0[i])):
+                    x[i] = x[i] + delta
+                break
+            elif (self.sign(x_i+delta) == self.sign(x_i)):
+                x[i] = x[i] + delta
+                break
+            else:
+                x[i] = 0
+                if self.sign(self.weights[i]) == self.sign(self.weights[i] + (self.alpha * self.sign(x_0[i]))):
+                    weights[i] = self.weights[i] + (self.alpha * np.sign(x_0[i]))
+                else:
+                    changed[i] = True
+        return x
+    
+    def get_robust_recourse2(self, x_0: np.ndarray):
         x = deepcopy(x_0)
         weights, bias = self.calc_theta_adv(x)
         changed = [True if i in self.imm_features else False for i in range(len(weights))]
