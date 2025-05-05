@@ -109,10 +109,21 @@ class LARRecourse:
         return directions
     
     def calc_theta_adv(self, x: np.ndarray):
-        weights_adv = self.weights - (self.alpha * np.sign(x))
+        # weights_adv = self.weights - (self.alpha * np.sign(x))
+        # for i in range(len(x)):
+        #     if np.sign(x[i]) == 0:
+        #         weights_adv[i] = weights_adv[i] - (self.alpha * np.sign(weights_adv[i]))
+
+        weights_adv = np.zeros(x.size)
         for i in range(len(x)):
-            if np.sign(x[i]) == 0:
-                weights_adv[i] = weights_adv[i] - (self.alpha * np.sign(weights_adv[i]))
+            if x[i] != 0:
+                weights_adv[i] = self.weights[i] - (self.alpha * np.sign(x[i]))
+            else:
+                if np.abs(self.weights[i]) > self.alpha:
+                    weights_adv[i] = self.weights[i] - (self.alpha * np.sign(self.weights[i]))
+                else:
+                    self.imm_features.append(i)
+
         bias_adv = self.bias - self.alpha
         
         return weights_adv, bias_adv
@@ -128,19 +139,9 @@ class LARRecourse:
     def get_robust_recourse(self, x_0: np.ndarray):
         x = deepcopy(x_0)
         active = np.arange(0, self.weights.size)
+
+        weights, bias = self.calc_theta_adv(x_0)
         active = np.delete(active, self.imm_features)
-        weights = np.zeros(self.weights.size)
-        bias = self.bias - self.alpha
-
-        for i_active, i in enumerate(active):
-            if x_0[i] != 0:
-                weights[i] = self.weights[i] - (self.alpha * np.sign(x_0[i]))
-            else:
-                if np.abs(self.weights[i]) > self.alpha:
-                    weights[i] = self.weights[i] - (self.alpha * np.sign(self.weights[i]))
-                else:
-                    active = np.delete(active, i_active)
-
         directions = self.find_directions(weights)
 
         while active.size != 0:
@@ -155,7 +156,7 @@ class LARRecourse:
                 break
             else:
                 x[i] = 0
-                if np.abs(weights[i]) > self.alpha:
+                if np.abs(self.weights[i]) > self.alpha:
                     weights[i] = self.weights[i] + (self.alpha * np.sign(x_0[i]))
                 else:
                     active = np.delete(active, i_active)            
@@ -182,9 +183,9 @@ class LARRecourse:
         x = deepcopy(x_0)
         J = RecourseCost(x_0, self.lamb)
         
-        for i in range(len(x)):
-            if x[i] == 0:
-                x[i] += self.rng.normal(0, eps)
+        # for i in range(len(x)):
+        #     if x[i] == 0:
+        #         x[i] += self.rng.normal(0, eps)
         
         weights, bias = self.calc_theta_adv(x)
         weights_p, bias_p = theta_p
