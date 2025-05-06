@@ -130,18 +130,7 @@ class LARRecourse:
         weights = np.zeros(self.weights.size)
         active = np.arange(0, self.weights.size)
         immFeatures = deepcopy(self.imm_features)
-
         bias = self.bias - self.alpha
-
-        # for i_active, i in enumerate(active):
-        #     if x_0[i] != 0:
-        #         weights[i] = self.weights[i] - (self.alpha * np.sign(x_0[i]))
-        #     else:
-        #         if np.abs(self.weights[i]) > self.alpha:
-        #             weights[i] = self.weights[i] - (self.alpha * np.sign(self.weights[i]))
-        #         else:
-        #             active = np.delete(active, i_active)
-        # active = np.delete(active, self.imm_features)
 
         for i in range(weights.size):
             if x_0[i] != 0:
@@ -158,7 +147,6 @@ class LARRecourse:
         while active.size != 0:
             i_active = np.argmax(np.abs(weights[active]))
             i = active[i_active]
-
             c = (x @ weights) + bias
             delta = self.calc_delta(weights[i], c)
 
@@ -172,31 +160,6 @@ class LARRecourse:
                 else:
                     active = np.delete(active, i_active)            
         return x
-
-        # x = deepcopy(x_0)
-        # weights, bias = self.calc_theta_adv(x)
-        # changed = [True if i in self.imm_features else False for i in range(len(weights))]
-        # directions = self.find_directions(weights)
-
-        # while True:
-        #     if np.all(changed):
-        #         break
-
-        #     i = self.get_max_idx(weights, changed)
-
-        #     c = (x @ weights) + bias
-        #     delta = self.calc_delta(weights[i], c)
-
-        #     if self.sign_x(x[i] + delta, directions[i]) == self.sign_x(x[i], directions[i]):
-        #         x[i] += delta
-        #         break
-        #     else:
-        #         x[i] = 0
-        #         if np.abs(self.weights[i]) > self.alpha:
-        #             weights[i] = self.weights[i] + (self.alpha * np.sign(x_0[i]))
-        #         else:            
-        #             changed[i] = True
-        # return x
         
     def get_consistent_recourse(self, x_0: np.ndarray, theta_p: tuple[np.ndarray, np.ndarray]):
         x = deepcopy(x_0)
