@@ -4,11 +4,12 @@ import torch
 import numpy as np
 import torch.optim as optim
 
-from typing import List, Callable
+from abc import ABC, abstractmethod
 from copy import deepcopy
-from torch.autograd import grad
 from scipy.optimize import linprog, milp, LinearConstraint, Bounds, minimize
 from src.utils import *
+from torch.autograd import grad
+from typing import List, Callable
 
 
 class RecourseCost:
@@ -39,9 +40,9 @@ class RecourseCost:
         return recourse_cost.detach().item()
     
     
-    
-class LARRecourse:
-    def __init__(self, weights: np.ndarray, bias: np.ndarray, alpha: float = 0.1, lamb: float = 0.1, imm_features: List = [], y_target: float = 1, seed: int|float = 0):
+class Recourse(ABC):
+    def __init__(self, weights: np.ndarray, bias: np.ndarray, alpha: float, lamb: float, imm_features: List, y_target: float = 1, seed: int|None = None):
+        super().__init__()
         self.weights = weights
         self.bias = bias
         self.alpha = alpha
@@ -49,6 +50,26 @@ class LARRecourse:
         self.y_target = y_target
         self.rng = np.random.default_rng(seed)
         self.imm_features = imm_features
+        self.name = "Base"
+
+    def calc_theta_adv(self, x: np.ndarray):
+        weights_adv = self.weights - (self.alpha * np.sign(x))
+        for i in range(len(x)):
+            if np.sign(x[i]) == 0:
+                weights_adv[i] = weights_adv[i] - (self.alpha * np.sign(weights_adv[i]))
+        bias_adv = self.bias - self.alpha
+        
+        return weights_adv, bias_adv
+    
+    @abstractmethod
+    def get_recourse(self, x, *args, **kwargs):
+        pass
+
+    
+class LARRecourse(Recourse):
+    def __init__(self, weights: np.ndarray, bias: np.ndarray, alpha: float, lamb: float = 0.1, imm_features: List = [], y_target: float = 1, seed: int|None = None):
+        super().__init__(weights, bias, alpha, lamb, imm_features, y_target, seed)
+        self.name = "Alg1"
         
     def calc_delta(self, w: float, c: float):
         if (w > self.lamb):
@@ -85,15 +106,6 @@ class LARRecourse:
                 return idx
             else:
                 weights_copy[idx] = 0.
-        
-    def calc_theta_adv(self, x: np.ndarray):
-        weights_adv = self.weights - (self.alpha * np.sign(x))
-        for i in range(len(x)):
-            if np.sign(x[i]) == 0:
-                weights_adv[i] = weights_adv[i] - (self.alpha * np.sign(weights_adv[i]))
-        bias_adv = self.bias - self.alpha
-        
-        return weights_adv, bias_adv
     
     def get_recourse(self, x_0: np.ndarray, beta: float, theta_p: tuple[np.ndarray, np.ndarray] = None):
         if beta == 1.:
@@ -227,7 +239,7 @@ class LARRecourse:
         return lamb
     
     
-class ROAR:
+class ROAR(Recourse):
     def __init__(self, weights: np.ndarray, bias: np.ndarray = None, alpha: float = 0.1, lamb: float = 0.1, y_target: float = 1., w_norm: str = 'L-inf'):
         self.set_weights(weights)
         self.set_bias(bias)
@@ -243,6 +255,7 @@ class ROAR:
             'J': []
         }
         self.w_norm = w_norm
+        self.name = "ROAR"
     
     def set_weights(self, weights: np.ndarray):
         if weights is not None:
@@ -377,7 +390,7 @@ class ROAR:
 
             i += 1
         
-        return x_r.detach().numpy(), np.hstack((weights.detach().numpy(), bias.detach().numpy()))
+        return x_r.detach().numpy()
     
     def get_augmented_recourse(self, x_0: np.ndarray, theta_p: tuple[np.ndarray, np.ndarray], beta: float, lr=1e-3, abstol=1e-4):
         x_0 = torch.from_numpy(x_0).float()
