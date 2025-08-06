@@ -107,7 +107,7 @@ class LARRecourse(Recourse):
             else:
                 weights_copy[idx] = 0.
     
-    def get_recourse(self, x_0: np.ndarray, beta: float, theta_p: tuple[np.ndarray, np.ndarray] = None):
+    def get_recourse(self, x_0: np.ndarray, beta: float = 1, theta_p: tuple[np.ndarray, np.ndarray] = None):
         if beta == 1.:
             return self.get_robust_recourse(x_0)
         elif beta == 0.:
@@ -359,8 +359,8 @@ class ROAR(Recourse):
         x_0 = torch.from_numpy(x_0).float()
         x_r = x_0.clone().requires_grad_()
             
-        weights = self.weights
-        bias = self.bias
+        weights = deepcopy(self.weights)
+        bias = deepcopy(self.bias)
     
         optimizer = optim.Adam([x_r], lr=lr)
         loss_fn = torch.nn.BCELoss()
