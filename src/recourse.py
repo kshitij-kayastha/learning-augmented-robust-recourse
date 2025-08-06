@@ -360,8 +360,8 @@ class ROAR(Recourse):
         x_0 = torch.from_numpy(x_0).float()
         x_r = x_0.clone().requires_grad_()
             
-        weights = self.weights
-        bias = self.bias
+        weights = deepcopy(self.weights)
+        bias = deepcopy(self.bias)
     
         optimizer = optim.Adam([x_r], lr=lr)
         loss_fn = torch.nn.BCELoss()
