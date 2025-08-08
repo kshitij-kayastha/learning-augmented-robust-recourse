@@ -256,7 +256,7 @@ class ROAR(Recourse):
             'J': []
         }
         self.w_norm = w_norm
-        self.name = "ROAR"
+        self.name = "ROARLInf"
     
     def set_weights(self, weights: np.ndarray):
         if weights is not None:
