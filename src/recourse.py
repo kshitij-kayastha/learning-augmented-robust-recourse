@@ -524,6 +524,9 @@ class L1Recourse(Recourse):
 
     def generateThetas(self):
         thetas = self._theta0.copy()
+        if self.alpha == 0:
+            return np.array([thetas])
+        
         thetas = np.repeat(thetas.reshape(1, self._theta0.size), (self._theta0.size * 2) - 1, axis=0)
         thetas_i = 0
 
@@ -679,7 +682,38 @@ class L1Recourse(Recourse):
             loss_diff = torch.dist(loss_prev, loss, 1)
 
         return np.append(xR.detach().numpy(), 1)
+    
+    def _runPSDInvScalingAlphaZero(self, x0_pt: torch.Tensor, thetaP: torch.Tensor, abstol:float = 1e-8, 
+                                  n_epochs:int = 2000, lr0:float = 5, power_t:float = 0.5):
+        
+        xR = x0_pt[:-1].clone().requires_grad_(True)
 
+        loss = torch.tensor(1.)
+        loss_diff = 1.
+
+        optimizer = torch.optim.SGD([xR], lr=lr0)
+        lr_lambda = lambda last_epoch: (last_epoch + 1) ** (-power_t)
+        scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_lambda)
+
+        for epoch in range(n_epochs):
+            if loss_diff <= abstol:
+                break
+
+            loss_prev = loss.clone().detach()
+            optimizer.zero_grad()
+
+            f_x = torch.nn.Sigmoid()(torch.matmul(xR, thetaP[:-1]) + thetaP[-1])
+            bce_loss = torch.nn.BCELoss()(f_x.unsqueeze(0), torch.ones(1, dtype=torch.float64))
+            cost = torch.dist(x0_pt[:-1], xR, 1)
+            loss = bce_loss + self.lamb*cost
+
+            loss.backward()
+            optimizer.step()
+            scheduler.step()
+                
+            loss_diff = torch.dist(loss_prev, loss, 1)
+
+        return np.append(xR.detach().numpy(), 1)
 
     def runPSDInvScaling(self, x0: np.ndarray, thetaP: np.ndarray, abstol:float = 1e-8, 
                                   n_epochs:int = 2000, lr0:float = 5, power_t:float = 0.5):
@@ -689,7 +723,9 @@ class L1Recourse(Recourse):
         attacked_i = np.argmax(np.abs(thetaP - self._theta0))
         thetaP_pt = torch.from_numpy(thetaP)
 
-        if attacked_i == (thetaP.size - 1):
+        if (thetaP == self._theta0).all():
+            xR = self._runPSDInvScalingAlphaZero(x0_pt, thetaP_pt, abstol, n_epochs, lr0, power_t) 
+        elif attacked_i == (thetaP.size - 1):
             xR = self._runPSDInvScalingBias(x0_pt, thetaP_pt, abstol, n_epochs, lr0, power_t)
         else:
             A, b = self.getConstraints(thetaP)
