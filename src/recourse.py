@@ -533,8 +533,21 @@ class L1Recourse(Recourse):
         super().__init__(weights, bias, alpha, lamb, imm_features, y_target, seed)
         self.name = "L1PSD"
 
-        self._theta0 = np.concat((weights, bias))
-        self._theta0_pt = torch.from_numpy(self._theta0)
+        if weights is not None and bias is not None:
+            self._theta0 = np.concat((weights, bias))
+            self._theta0_pt = torch.from_numpy(self._theta0)
+
+    def set_weights(self, weights):
+        self.weights = weights
+        if self.bias is not None:
+            self._theta0 = np.concat((self.weights, self.bias))
+            self._theta0_pt = torch.from_numpy(self._theta0)
+
+    def set_bias(self, bias):
+        self.bias = bias
+        if self.weights is not None:
+            self._theta0 = np.concat((self.weights, self.bias))
+            self._theta0_pt = torch.from_numpy(self._theta0)
 
     def generateThetas(self):
         thetas = self._theta0.copy()
