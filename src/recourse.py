@@ -65,12 +65,26 @@ class Recourse(ABC):
     def get_recourse(self, x, *args, **kwargs):
         pass
 
+    @abstractmethod
+    def set_weights(self, weights):
+        pass
+
+    @abstractmethod
+    def set_bias(self, bias):
+        pass
+
     
 class LARRecourse(Recourse):
     def __init__(self, weights: np.ndarray, bias: np.ndarray, alpha: float, lamb: float = 0.1, imm_features: List = [], y_target: float = 1, seed: int|None = None):
         super().__init__(weights, bias, alpha, lamb, imm_features, y_target, seed)
         self.name = "Alg1"
-        
+    
+    def set_weights(self, weights):
+        self.weights = weights
+
+    def set_bias(self, bias):
+        self.bias = bias
+
     def calc_delta(self, w: float, c: float):
         if (w > self.lamb):
             delta = ((np.log((w - self.lamb)/self.lamb) - c) / w)
