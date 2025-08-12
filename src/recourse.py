@@ -255,7 +255,7 @@ class LARRecourse(Recourse):
     
     
 class ROAR(Recourse):
-    def __init__(self, weights: np.ndarray, bias: np.ndarray = None, alpha: float = 0.1, lamb: float = 0.1, y_target: float = 1., w_norm: str = 'L-inf'):
+    def __init__(self, weights: np.ndarray, bias: np.ndarray = None, alpha: float = 0.1, lamb: float = 0.1, y_target: float = 1., w_norm: str = 'L-1'):
         self.set_weights(weights)
         self.set_bias(bias)
         self.alpha = alpha
@@ -270,7 +270,7 @@ class ROAR(Recourse):
             'J': []
         }
         self.w_norm = w_norm
-        self.name = "ROARLInf"
+        self.name = "ROARL1"
     
     def set_weights(self, weights: np.ndarray):
         if weights is not None:
@@ -343,7 +343,7 @@ class ROAR(Recourse):
         x = torch.cat((x, torch.ones(1)), 0)
         
         i = torch.argmax(torch.abs(x))
-        theta[i] = theta[i] + (self.alpha * self.sign(x[i]))
+        theta[i] = theta[i] - (self.alpha * self.sign(x[i]))
         weights, bias = theta[:-1], theta[[-1]]
         
         return weights.detach().numpy(), bias.detach().numpy()
@@ -353,13 +353,13 @@ class ROAR(Recourse):
         x = torch.cat((x, torch.ones(1)), 0)
         
         i = torch.argmax(torch.abs(x))
-        theta[i] = theta[i] + (self.alpha * self.sign(x[i]))
+        theta[i] = theta[i] - (self.alpha * self.sign(x[i]))
         weights, bias = theta[:-1], theta[[-1]]
         
         return weights.detach().numpy(), bias.detach().numpy()
         
         
-    def get_recourse(self, x_0, theta_p=None, beta=1, lr=1e-3, abstol=1e-4, w_norm='L-inf'):
+    def get_recourse(self, x_0, theta_p=None, beta=1, lr=1e-3, abstol=1e-4, w_norm='L-1'):
         self.w_norm = w_norm
         for key in self.train_hist.keys():
             self.train_hist[key].clear()
