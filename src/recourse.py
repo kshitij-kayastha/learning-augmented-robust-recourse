@@ -78,7 +78,7 @@ class Recourse(ABC):
 class LARRecourse(Recourse):
     def __init__(self, weights: np.ndarray, bias: np.ndarray, alpha: float, lamb: float = 0.1, imm_features: List = [], y_target: float = 1, seed: int|None = None):
         super().__init__(weights, bias, alpha, lamb, imm_features, y_target, seed)
-        self.name = "Alg1"
+        self.name = "alg1"
     
     def set_weights(self, weights):
         self.weights = weights
