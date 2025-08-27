@@ -1087,3 +1087,19 @@ class L1Recourse(Recourse):
         x_r = self.runPSDInvScalingAllThetas(x_0, abstol=1e-7, n_epochs=2000, lr0=2.5,
                                               power_t=0.5, returnDataFrame=False)
         return x_r[:-1]
+
+class Baseline(Recourse):
+    def __init__(self, weights: np.ndarray, bias: np.ndarray, alpha: float = 0.1, lamb: float = 0.1, imm_features: List = [], y_target: float = 1, seed: int|float = 0):
+        super().__init__(weights, bias, alpha, lamb, imm_features, y_target, seed)
+        self.lamb = 0
+        
+        self.name = "Baseline"
+
+    def set_weights(self, weights):
+        self.weights = weights
+
+    def set_bias(self, bias):
+        self.bias = bias
+
+    def get_recourse(self, x_0: np.ndarray):
+        return x_0.copy()
