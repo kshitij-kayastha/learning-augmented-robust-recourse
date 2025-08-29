@@ -1084,8 +1084,8 @@ class L1Recourse(Recourse):
     def get_recourse(self, x_0: np.ndarray):
 
         x_0 = np.hstack((x_0, 1))
-        x_r = self.runPSDInvScalingAllThetas(x_0, abstol=1e-7, n_epochs=2000, lr0=2.5,
-                                              power_t=0.5, returnDataFrame=False)
+        x_r = self.runPSDInvScalingAllThetas(x_0, abstol=1e-7, n_epochs=5000, lr0=1.0,
+                                              power_t=0.8, returnDataFrame=False)
         return x_r[:-1]
 
 class Baseline(Recourse):
