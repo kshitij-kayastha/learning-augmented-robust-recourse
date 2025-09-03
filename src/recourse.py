@@ -937,7 +937,7 @@ class L1Recourse(Recourse):
         return x.value
     
     def _runPSDInvScalingMainDs(self, x0_pt: torch.Tensor, thetaP: torch.Tensor, A, b, abstol:float = 1e-8, 
-                                  n_epochs:int = 2000, lr0:float = 5, power_t:float = 0.5):
+                                  n_epochs:int = 2000, lr0:float = 5, step_size:int =40, gamma:float =0.9):
 
         if not self.isFeasible(x0_pt, thetaP, has_bias=True):
             xR = torch.zeros(len(x0_pt) - 1, dtype=torch.float64, requires_grad=True)
@@ -948,8 +948,9 @@ class L1Recourse(Recourse):
         loss_diff = 1.
 
         optimizer = torch.optim.SGD([xR], lr=lr0)
-        lr_lambda = lambda last_epoch: (last_epoch + 1) ** (-power_t)
-        scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_lambda)
+        # lr_lambda = lambda last_epoch: (last_epoch + 1) ** (-power_t)
+        # scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_lambda)
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size , gamma=gamma)
 
         for epoch in range(n_epochs):
             if loss_diff <= abstol:
@@ -975,7 +976,7 @@ class L1Recourse(Recourse):
         return np.append(xR.detach().numpy(), 1)
 
     def _runPSDInvScalingBias(self, x0_pt: torch.Tensor, thetaP: torch.Tensor, abstol:float = 1e-8, 
-                                  n_epochs:int = 2000, lr0:float = 5, power_t:float = 0.5):
+                                  n_epochs:int = 2000, lr0:float = 5, step_size:int =40, gamma:float =0.9):
         
         if not self.isFeasible(x0_pt, thetaP, has_bias=True):
             xR = torch.zeros(len(x0_pt) - 1, dtype=torch.float64, requires_grad=True)
@@ -986,8 +987,9 @@ class L1Recourse(Recourse):
         loss_diff = 1.
 
         optimizer = torch.optim.SGD([xR], lr=lr0)
-        lr_lambda = lambda last_epoch: (last_epoch + 1) ** (-power_t)
-        scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_lambda)
+        # lr_lambda = lambda last_epoch: (last_epoch + 1) ** (-power_t)
+        # scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_lambda)
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size , gamma=gamma)
 
         for epoch in range(n_epochs):
             if loss_diff <= abstol:
@@ -1013,7 +1015,7 @@ class L1Recourse(Recourse):
         return np.append(xR.detach().numpy(), 1)
     
     def _runPSDInvScalingAlphaZero(self, x0_pt: torch.Tensor, thetaP: torch.Tensor, abstol:float = 1e-8, 
-                                  n_epochs:int = 2000, lr0:float = 5, power_t:float = 0.5):
+                                  n_epochs:int = 2000, lr0:float = 5, step_size:int =40, gamma:float =0.9):
         
         xR = x0_pt[:-1].clone().requires_grad_(True)
 
@@ -1021,8 +1023,9 @@ class L1Recourse(Recourse):
         loss_diff = 1.
 
         optimizer = torch.optim.SGD([xR], lr=lr0)
-        lr_lambda = lambda last_epoch: (last_epoch + 1) ** (-power_t)
-        scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_lambda)
+        # lr_lambda = lambda last_epoch: (last_epoch + 1) ** (-power_t)
+        # scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_lambda)
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size , gamma=gamma)
 
         for epoch in range(n_epochs):
             if loss_diff <= abstol:
@@ -1045,7 +1048,7 @@ class L1Recourse(Recourse):
         return np.append(xR.detach().numpy(), 1)
 
     def runPSDInvScaling(self, x0: np.ndarray, thetaP: np.ndarray, abstol:float = 1e-8, 
-                                  n_epochs:int = 2000, lr0:float = 5, power_t:float = 0.5):
+                                  n_epochs:int = 2000, lr0:float = 5, step_size=40, gamma=0.9):
         
         x0_pt = torch.from_numpy(x0)
         
@@ -1053,24 +1056,24 @@ class L1Recourse(Recourse):
         thetaP_pt = torch.from_numpy(thetaP)
 
         if (thetaP == self._theta0).all():
-            xR = self._runPSDInvScalingAlphaZero(x0_pt, thetaP_pt, abstol, n_epochs, lr0, power_t) 
+            xR = self._runPSDInvScalingAlphaZero(x0_pt, thetaP_pt, abstol, n_epochs, lr0, step_size, gamma) 
         elif attacked_i == (thetaP.size - 1):
-            xR = self._runPSDInvScalingBias(x0_pt, thetaP_pt, abstol, n_epochs, lr0, power_t)
+            xR = self._runPSDInvScalingBias(x0_pt, thetaP_pt, abstol, n_epochs, lr0, step_size, gamma)
         else:
             A, b = self.getConstraints(thetaP)
-            xR = self._runPSDInvScalingMainDs(x0_pt, thetaP_pt, A, b, abstol, n_epochs, lr0, power_t)
+            xR = self._runPSDInvScalingMainDs(x0_pt, thetaP_pt, A, b, abstol, n_epochs, lr0, step_size, gamma)
 
         return xR
     
     def runPSDInvScalingAllThetas(self, x0: np.ndarray, abstol:float = 1e-8, n_epochs:int = 2000, 
-                                    lr0:float = 5, power_t:float = 0.5, returnDataFrame = False):
+                                    lr0:float = 5, step_size=40, gamma=0.9, returnDataFrame = False):
         
         thetaPs = self.generateThetas()
         xRs = np.empty(thetaPs.shape)
         Js = np.empty(thetaPs.shape[0])
 
         for i, thetaP in enumerate(thetaPs):
-            xRs[i] = self.runPSDInvScaling(x0, thetaP, abstol, n_epochs, lr0, power_t)
+            xRs[i] = self.runPSDInvScaling(x0, thetaP, abstol, n_epochs, lr0, step_size, gamma)
             Js[i] = self.getStats(x0, xRs[i], thetaP)
 
         if returnDataFrame:
@@ -1084,8 +1087,10 @@ class L1Recourse(Recourse):
     def get_recourse(self, x_0: np.ndarray):
 
         x_0 = np.hstack((x_0, 1))
-        x_r = self.runPSDInvScalingAllThetas(x_0, abstol=1e-7, n_epochs=5000, lr0=1.0,
-                                              power_t=0.8, returnDataFrame=False)
+        # x_r = self.runPSDInvScalingAllThetas(x_0, abstol=1e-7, n_epochs=5000, lr0=1.0,
+        #                                       power_t=0.8, returnDataFrame=False)
+        x_r = self.runPSDInvScalingAllThetas(x_0, abstol=1e-9, n_epochs=7000, lr0=2.5,
+                                              step_size=30, gamma=0.95, returnDataFrame=False)
         return x_r[:-1]
 
 class Baseline(Recourse):
