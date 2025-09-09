@@ -78,7 +78,7 @@ class Recourse(ABC):
 class LARRecourse(Recourse):
     def __init__(self, weights: np.ndarray, bias: np.ndarray, alpha: float, lamb: float = 0.1, imm_features: List = [], y_target: float = 1, seed: int|None = None):
         super().__init__(weights, bias, alpha, lamb, imm_features, y_target, seed)
-        self.name = "alg1"
+        self.name = "Alg1"
     
     def set_weights(self, weights):
         self.weights = weights
@@ -1086,25 +1086,50 @@ class L1Recourse(Recourse):
 
     def get_recourse(self, x_0: np.ndarray):
 
+        abstol = 1e-12
+        lr0 = 2.5
+
+        # sba
+        if self.lamb <= 0.001:
+            lr0 = 10
+        elif self.lamb <= 0.01:
+            lr0 = 7.5
+        elif self.lamb <= 0.1:
+            lr0 = 5
+        elif self.lamb <= 0.5:
+            lr0 = 2.5
+        elif self.lamb <= 2.5:
+            lr0 = 1
+        elif self.lamb <= 3.5:
+            lr0 = 0.5
+        else:
+            lr0 = 0.1
+        
+
+        # # German
+        # if self.lamb <= 0.001:
+        #     lr0 = 40
+        # elif self.lamb <= 0.005:
+        #     lr0 = 30
+        # elif self.lamb <= 0.01:
+        #     lr0 = 25
+        # elif self.lamb <= 0.05:
+        #     lr0 = 15
+        # elif self.lamb <= 0.1:
+        #     lr0 = 10
+        # elif self.lamb <= 0.3:
+        #     lr0 = 5
+        # elif self.lamb <= 0.5:
+        #     lr0 = 0.5
+        # elif self.lamb <= 1:
+        #     lr0 = 0.1
+        # else:
+        #     lr0 = 0.05
+
+
         x_0 = np.hstack((x_0, 1))
         # x_r = self.runPSDInvScalingAllThetas(x_0, abstol=1e-7, n_epochs=5000, lr0=1.0,
         #                                       power_t=0.8, returnDataFrame=False)
-        x_r = self.runPSDInvScalingAllThetas(x_0, abstol=1e-9, n_epochs=7000, lr0=2.5,
+        x_r = self.runPSDInvScalingAllThetas(x_0, abstol=abstol, n_epochs=7000, lr0=lr0,
                                               step_size=30, gamma=0.95, returnDataFrame=False)
         return x_r[:-1]
-
-class Baseline(Recourse):
-    def __init__(self, weights: np.ndarray, bias: np.ndarray, alpha: float = 0.1, lamb: float = 0.1, imm_features: List = [], y_target: float = 1, seed: int|float = 0):
-        super().__init__(weights, bias, alpha, lamb, imm_features, y_target, seed)
-        self.lamb = 0
-        
-        self.name = "Baseline"
-
-    def set_weights(self, weights):
-        self.weights = weights
-
-    def set_bias(self, bias):
-        self.bias = bias
-
-    def get_recourse(self, x_0: np.ndarray):
-        return x_0.copy()
