@@ -1089,24 +1089,40 @@ class L1Recourse(Recourse):
         abstol = 1e-12
         lr0 = 2.5
 
-        # sba
-        if self.lamb <= 0.001:
-            lr0 = 10
-        elif self.lamb <= 0.01:
-            lr0 = 7.5
-        elif self.lamb <= 0.1:
-            lr0 = 5
-        elif self.lamb <= 0.5:
-            lr0 = 2.5
-        elif self.lamb <= 2.5:
-            lr0 = 1
-        elif self.lamb <= 3.5:
-            lr0 = 0.5
-        else:
-            lr0 = 0.1
+        # # sba (LR)
+        # if self.lamb <= 0.001:
+        #     lr0 = 10
+        # elif self.lamb <= 0.01:
+        #     lr0 = 7.5
+        # elif self.lamb <= 0.1:
+        #     lr0 = 5
+        # elif self.lamb <= 0.5:
+        #     lr0 = 2.5
+        # elif self.lamb <= 2.5:
+        #     lr0 = 1
+        # elif self.lamb <= 3.5:
+        #     lr0 = 0.5
+        # else:
+        #     lr0 = 25
+
+        # # sba (NN)
+        # if self.lamb <= 0.001:
+        #     lr0 = 10
+        # elif self.lamb <= 0.01:
+        #     lr0 = 7.5
+        # elif self.lamb <= 0.1:
+        #     lr0 = 5
+        # elif self.lamb <= 0.5:
+        #     lr0 = 2.5
+        # elif self.lamb <= 2.5:
+        #     lr0 = 1
+        # elif self.lamb <= 3.5:
+        #     lr0 = 0.5
+        # else:
+        #     lr0 = 0.1
         
 
-        # # German
+        # German (LR) (alpha=0.1)
         # if self.lamb <= 0.001:
         #     lr0 = 40
         # elif self.lamb <= 0.005:
@@ -1124,6 +1140,44 @@ class L1Recourse(Recourse):
         # elif self.lamb <= 1:
         #     lr0 = 0.1
         # else:
+        #     lr0 = 0.05
+
+        # German (LR) (alpha=0.2)
+        if self.lamb <= 0.001:
+            lr0 = 50
+        elif self.lamb <= 0.005:
+            lr0 = 40
+        elif self.lamb <= 0.01:
+            lr0 = 30
+        elif self.lamb <= 0.05:
+            lr0 = 15
+        elif self.lamb <= 0.1:
+            lr0 = 10
+        elif self.lamb <= 0.3:
+            lr0 = 5
+        elif self.lamb <= 0.5:
+            lr0 = 0.5
+        elif self.lamb <= 1:
+            lr0 = 0.1
+        else:
+            lr0 = 0.05
+
+        # German (NN)
+        # if self.lamb <= 0.001:
+        #     lr0 = 15
+        # elif self.lamb <= 0.01:
+        #     lr0 = 10
+        # elif self.lamb <= 0.1:
+        #     lr0 = 5
+        # elif self.lamb <= 0.3:
+        #     lr0 = 2.5
+        # elif self.lamb <= 0.5:
+        #     lr0 = 1
+        # elif self.lamb <= 0.8:
+        #     lr0 = 0.5
+        # elif self.lamb <= 1:
+        #     lr0 = 0.1
+        # elif self.lamb <= 2:
         #     lr0 = 0.05
 
 
