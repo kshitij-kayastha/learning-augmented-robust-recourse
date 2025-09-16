@@ -1085,11 +1085,10 @@ class L1Recourse(Recourse):
             return xRs[J_min_i]
 
     def get_recourse(self, x_0: np.ndarray):
-
         abstol = 1e-12
         lr0 = 2.5
 
-        # # sba (LR)
+        # sba (LR)(alpha=0.1)
         # if self.lamb <= 0.001:
         #     lr0 = 10
         # elif self.lamb <= 0.01:
@@ -1104,8 +1103,23 @@ class L1Recourse(Recourse):
         #     lr0 = 0.5
         # else:
         #     lr0 = 25
+        # sba (LR)(alpha=0.5)
+        # if self.lamb <= 0.001:
+        #     lr0 = 12.5
+        # elif self.lamb <= 0.01:
+        #     lr0 = 11
+        # elif self.lamb <= 0.1:
+        #     lr0 = 10
+        # elif self.lamb <= 0.5:
+        #     lr0 = 7.5
+        # elif self.lamb <= 2.5:
+        #     lr0 = 5
+        # elif self.lamb <= 3.5:
+        #     lr0 = 2.5
+        # else:
+        #     lr0 = 25
 
-        # # sba (NN)
+        # sba (NN) (alpha=0.1)
         # if self.lamb <= 0.001:
         #     lr0 = 10
         # elif self.lamb <= 0.01:
@@ -1120,6 +1134,23 @@ class L1Recourse(Recourse):
         #     lr0 = 0.5
         # else:
         #     lr0 = 0.1
+        # sba (NN) (alpha=0.5)
+        # if self.lamb <= 0.00001:
+        #     lr0 = 18
+        # elif self.lamb <= 0.001:
+        #     lr0 = 15
+        # elif self.lamb <= 0.01:
+        #     lr0 = 10
+        # elif self.lamb <= 0.1:
+        #     lr0 = 9
+        # elif self.lamb <= 0.5:
+        #     lr0 = 7.5
+        # elif self.lamb <= 2.5:
+        #     lr0 = 5
+        # elif self.lamb <= 3.5:
+        #     lr0 = 2.5
+        # else:
+        #     lr0 = 25
         
 
         # German (LR) (alpha=0.1)
@@ -1141,28 +1172,46 @@ class L1Recourse(Recourse):
         #     lr0 = 0.1
         # else:
         #     lr0 = 0.05
-
         # German (LR) (alpha=0.2)
-        if self.lamb <= 0.001:
-            lr0 = 50
-        elif self.lamb <= 0.005:
-            lr0 = 40
-        elif self.lamb <= 0.01:
-            lr0 = 30
-        elif self.lamb <= 0.05:
-            lr0 = 15
-        elif self.lamb <= 0.1:
-            lr0 = 10
-        elif self.lamb <= 0.3:
-            lr0 = 5
-        elif self.lamb <= 0.5:
-            lr0 = 0.5
-        elif self.lamb <= 1:
-            lr0 = 0.1
-        else:
-            lr0 = 0.05
+        # if self.lamb <= 0.001:
+        #     lr0 = 50
+        # elif self.lamb <= 0.005:
+        #     lr0 = 40
+        # elif self.lamb <= 0.01:
+        #     lr0 = 30
+        # elif self.lamb <= 0.05:
+        #     lr0 = 15
+        # elif self.lamb <= 0.1:
+        #     lr0 = 10
+        # elif self.lamb <= 0.3:
+        #     lr0 = 5
+        # elif self.lamb <= 0.5:
+        #     lr0 = 0.5
+        # elif self.lamb <= 1:
+        #     lr0 = 0.1
+        # else:
+        #     lr0 = 0.05
+        # German (LR) (alpha=0.5)
+        # if self.lamb <= 0.001:
+        #     lr0 = 40
+        # elif self.lamb <= 0.005:
+        #     lr0 = 30
+        # elif self.lamb <= 0.01:
+        #     lr0 = 25
+        # elif self.lamb <= 0.05:
+        #     lr0 = 15
+        # elif self.lamb <= 0.1:
+        #     lr0 = 10
+        # elif self.lamb <= 0.3:
+        #     lr0 = 9
+        # elif self.lamb <= 0.5:
+        #     lr0 = 7.5
+        # elif self.lamb <= 1:
+        #     lr0 = 5
+        # else:
+        #     lr0 = 0.05
 
-        # German (NN)
+        # German (NN) (alpha=0.1)
         # if self.lamb <= 0.001:
         #     lr0 = 15
         # elif self.lamb <= 0.01:
@@ -1179,6 +1228,29 @@ class L1Recourse(Recourse):
         #     lr0 = 0.1
         # elif self.lamb <= 2:
         #     lr0 = 0.05
+        # German (NN) (alpha=0.5)
+        # if self.lamb <= 0.001:
+        #     lr0 = 25
+        # elif self.lamb <= 0.005:
+        #     lr0 = 17.5
+        # elif self.lamb <= 0.01:
+        #     lr0 = 15
+        # elif self.lamb <= 0.03:
+        #     lr0 = 10
+        # elif self.lamb <= 0.1:
+        #     lr0 = 7.5
+        # elif self.lamb <= 0.3:
+        #     lr0 = 6
+        # elif self.lamb <= 0.5:
+        #     lr0 = 5
+        # elif self.lamb <= 0.8:
+        #     lr0 = 2.5
+        # elif self.lamb <= 1:
+        #     lr0 = 1.5
+        # elif self.lamb <= 2:
+        #     lr0 = 0.5
+        # else:
+        #     lr0 = 50
 
 
         x_0 = np.hstack((x_0, 1))
