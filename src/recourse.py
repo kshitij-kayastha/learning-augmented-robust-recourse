@@ -833,6 +833,8 @@ class ROARL1(Recourse):
 class L1Recourse(Recourse):
     def __init__(self, weights: np.ndarray, bias: np.ndarray, alpha: float = 0.1, lamb: float = 0.1, imm_features: List = [], y_target: float = 1, seed: int|float = 0):
         super().__init__(weights, bias, alpha, lamb, imm_features, y_target, seed)
+
+        self.lr = 2.5
         self.name = "L1PSD"
 
         if weights is not None and bias is not None:
@@ -850,6 +852,9 @@ class L1Recourse(Recourse):
         if self.weights is not None:
             self._theta0 = np.concat((self.weights, self.bias))
             self._theta0_pt = torch.from_numpy(self._theta0)
+
+    def set_learning_rate(self, lr:float):
+        self.lr = lr
 
     def generateThetas(self):
         thetas = self._theta0.copy()
@@ -1085,8 +1090,8 @@ class L1Recourse(Recourse):
             return xRs[J_min_i]
 
     def get_recourse(self, x_0: np.ndarray):
-        abstol = 1e-12
-        lr0 = 2.5
+        # abstol = 1e-12
+        # lr0 = 2.5
 
         # sba (LR)(alpha=0.1)
         # if self.lamb <= 0.001:
@@ -1117,7 +1122,7 @@ class L1Recourse(Recourse):
         # elif self.lamb <= 3.5:
         #     lr0 = 2.5
         # else:
-        #     lr0 = 25
+        #     lr0 = 1.0
 
         # sba (NN) (alpha=0.1)
         # if self.lamb <= 0.001:
@@ -1150,7 +1155,7 @@ class L1Recourse(Recourse):
         # elif self.lamb <= 3.5:
         #     lr0 = 2.5
         # else:
-        #     lr0 = 25
+        #     lr0 = 1.0
         
 
         # German (LR) (alpha=0.1)
@@ -1160,25 +1165,6 @@ class L1Recourse(Recourse):
         #     lr0 = 30
         # elif self.lamb <= 0.01:
         #     lr0 = 25
-        # elif self.lamb <= 0.05:
-        #     lr0 = 15
-        # elif self.lamb <= 0.1:
-        #     lr0 = 10
-        # elif self.lamb <= 0.3:
-        #     lr0 = 5
-        # elif self.lamb <= 0.5:
-        #     lr0 = 0.5
-        # elif self.lamb <= 1:
-        #     lr0 = 0.1
-        # else:
-        #     lr0 = 0.05
-        # German (LR) (alpha=0.2)
-        # if self.lamb <= 0.001:
-        #     lr0 = 50
-        # elif self.lamb <= 0.005:
-        #     lr0 = 40
-        # elif self.lamb <= 0.01:
-        #     lr0 = 30
         # elif self.lamb <= 0.05:
         #     lr0 = 15
         # elif self.lamb <= 0.1:
@@ -1250,12 +1236,10 @@ class L1Recourse(Recourse):
         # elif self.lamb <= 2:
         #     lr0 = 0.5
         # else:
-        #     lr0 = 50
+        #     lr0 = 0.1
 
 
         x_0 = np.hstack((x_0, 1))
-        # x_r = self.runPSDInvScalingAllThetas(x_0, abstol=1e-7, n_epochs=5000, lr0=1.0,
-        #                                       power_t=0.8, returnDataFrame=False)
-        x_r = self.runPSDInvScalingAllThetas(x_0, abstol=abstol, n_epochs=7000, lr0=lr0,
+        x_r = self.runPSDInvScalingAllThetas(x_0, abstol=1e-12, n_epochs=7000, lr0=self.lr,
                                               step_size=30, gamma=0.95, returnDataFrame=False)
         return x_r[:-1]

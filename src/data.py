@@ -138,4 +138,30 @@ class SBADataset(Dataset):
         
         self.cat_features, self.num_features = list(range(20,25)), list(range(20))
         self.imm_features = []
+
+
+
+class IncomeDataset(Dataset):
+    def __init__(self, seed = 0, n_folds = 2):
+        super(IncomeDataset, self).__init__(seed, n_folds)
+
+        df = pd.read_pickle("../datasets/acs_income.pkl").sample(frac=1, random_state=self.seed)
+        cat_features = ['COW', 'SCHL', 'MAR', 'RELP', 'SEX', 'RAC1P']
+        num_features = ['AGEP', 'WKHP']
         
+        df.drop(columns=['OCCP', 'POBP'], inplace=True)
+
+        df["SCHL_new"] = df["SCHL"].apply(lambda x: 1 if x <= 15 else (x - 14))
+        df["SCHL"] = df["SCHL_new"]
+        df.drop(columns=["SCHL_new"], inplace=True)
+
+        df = pd.get_dummies(df, columns=cat_features, dtype=float)
+        df = self.scale_num_features(df, num_features=num_features)
+        df['PINCP'] = df['PINCP'].apply(lambda x: 1 if x >= 50000 else 0)
+
+        self.y = df['PINCP']
+        self.X = df.drop(columns=['PINCP'])
+
+        self.name = 'income'
+        self.num_features, self.cat_features = list(range(2)), list(range(2,54))
+        self.imm_features = [] 
