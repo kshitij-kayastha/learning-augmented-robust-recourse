@@ -69,7 +69,7 @@ class NN(Model):
 	def torch_model(self,x):
 		return self.model(x)[0]
 
-	def train(self, X_train, y_train, verbose=0):
+	def train(self, X_train, y_train, verbose=0, epochs=100):
 		torch.manual_seed(0)
 		X_train = torch.from_numpy(X_train).float()
 		y_train = torch.from_numpy(y_train).float()
@@ -77,7 +77,6 @@ class NN(Model):
 		loss_fn = nn.BCELoss()
 		optimizer = torch.optim.Adam(self.model.parameters())
 
-		epochs = 100
 		for epoch in range(epochs):
 			self.model.train()
 			optimizer.zero_grad()
