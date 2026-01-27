@@ -1,7 +1,5 @@
 # Learning Augmented Robust Algorithmic Recourse
 
-This is a joint work of [Kshitij Kayastha](https://github.com/kshitij-kayastha), [Shahin Jabbari](https://shahin-jabbari.github.io/), and [Vasilis Gkatzelis](https://www.cs.drexel.edu/~vg399/).
-
 ## Installation instructions
 
 1. Clone the repo.
