@@ -1,7 +1,3 @@
-# Author: Kshitij Kayastha
-# Date: Feb 3, 2025
-
-
 import numpy as np
 import pandas as pd
 from typing import List
