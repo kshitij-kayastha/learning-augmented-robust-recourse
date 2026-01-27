@@ -1,6 +1,3 @@
-# Author: Kshitij Kayastha
-# Date: Feb 3, 2025
-
 
 import lime
 import lime.lime_tabular
